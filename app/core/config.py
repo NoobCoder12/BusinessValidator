@@ -1,0 +1,21 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_SERVER: str
+    POSTGRES_DB: str
+
+    @property   # method is used as variable
+    def DATABASE_URL(self) -> str:
+        """
+        Returns valid db url. Without method there would be an error.
+        """
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:5432/{self.POSTGRES_DB}"
+
+    # Shows where to find variables, defines behaviour while loading settings
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # 'extra' ingores more values in file than defined above
+
+
+settings = Settings()   # To import it into different module
