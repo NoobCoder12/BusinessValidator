@@ -9,5 +9,6 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(30))
-    password: Mapped[str]
+    email: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(30), nullable=False, unique=True)
+    password: Mapped[str] = mapped_column(String, nullable=False)
