@@ -107,3 +107,20 @@ async def refresh_access_token(
     new_access_token = create_access_token(data={"sub": str(user_id)})
 
     return {"access_token": new_access_token, "token_type": "bearer"}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Deletes cookie from browser
+    """
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,              # For safety, JS won't get that
+        secure=False,               # TODO: Change for True while deploying
+        samesite="lax"              # Prevents CSRF
+    )
+    
+    return {"detail": "Successfully logged out"}
+
+    
