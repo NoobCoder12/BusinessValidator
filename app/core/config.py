@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str
     POSTGRES_DB: str
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE: int
+
     @property   # method is used as variable
     def DATABASE_URL(self) -> str:
         """
