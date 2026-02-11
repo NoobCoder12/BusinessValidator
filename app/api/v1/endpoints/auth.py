@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Response, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,7 +7,8 @@ from app.schemas.user import UserCreate, UserOut
 from app.db.deps import get_db, get_current_user, oauth2_scheme
 from app.models.user import User
 from app.core.security import pwd_context, verify_password
-from app.core.auth import create_access_token
+from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -40,6 +41,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
 @router.post("/token")
 async def login_for_access_token(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -56,6 +58,17 @@ async def login_for_access_token(
         )
 
     access_token = create_access_token(data={"sub": str(user.id)})      # str for safety issues
+    refresh_token = create_refresh_token(data={"sub": str(user.id)}) 
+
+    # Create cookie for refresh token
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,              # For safety, JS won't get that
+        secure=False,               # TODO: Change for True while deploying
+        samesite="lax",             # Prevents CSRF
+        max_age=settings.REFRESH_ACCESS_TOKEN_EXPIRE * 3600 * 24
+    )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -68,3 +81,29 @@ async def read_user_me(current_user: User = Depends(get_current_user)):
     """
 
     return current_user
+
+
+@router.post("/refresh")
+async def refresh_access_token(
+    db: AsyncSession = Depends(get_db),
+    refresh_token: str = Cookie(None)       # FastAPI will look for refresh_token
+):
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token found")
+
+    payload = verify_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired or is not valid")
+
+    user_id: str = payload.get("sub")
+
+    query = select(User).where(User.id == int(user_id))
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User does not exist")
+
+    new_access_token = create_access_token(data={"sub": str(user_id)})
+
+    return {"access_token": new_access_token, "token_type": "bearer"}

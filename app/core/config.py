@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE: int
+    
+    REFRESH_TOKEN_KEY: str
+    REFRESH_ACCESS_TOKEN_EXPIRE: int
 
     @property   # method is used as variable
     def DATABASE_URL(self) -> str:
