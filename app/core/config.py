@@ -17,12 +17,14 @@ class Settings(BaseSettings):
     @property   # method is used as variable
     def DATABASE_URL(self) -> str:
         """
-        Returns valid db url. Without method there would be an error.
+        Returns valid db url.
+        Dynamically assembles the async database connection string 
+        using individual PostgreSQL credentials.
         """
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:5432/{self.POSTGRES_DB}"
 
     # Shows where to find variables, defines behaviour while loading settings
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # 'extra' ingores more values in file than defined above
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")  # Prevents errors if .env contains variables not defined in this class
 
 
 settings = Settings()   # To import it into different module

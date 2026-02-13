@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, Response, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Request
 
 from app.schemas.user import UserCreate, UserOut
 from app.db.deps import get_db, get_current_user, oauth2_scheme
@@ -9,6 +10,7 @@ from app.models.user import User
 from app.core.security import pwd_context, verify_password
 from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token
 from app.core.config import settings
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -40,7 +42,9 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/token")
+@limiter.limit("5/minute")
 async def login_for_access_token(
+    request: Request,   # Limiter needs an access to request
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -112,7 +116,8 @@ async def refresh_access_token(
 @router.post("/logout")
 async def logout(response: Response):
     """
-    Deletes cookie from browser
+    Deletes cookie from browser.
+    Access token still lives, but won't be refreshed.
     """
     response.delete_cookie(
         key="refresh_token",
