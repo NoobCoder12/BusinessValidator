@@ -12,10 +12,11 @@ from alembic import context
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
 # My files import
+# Each model must be added here
 from app.core.config import settings
 from app.db.base import Base
-from app.models.user import User 
-
+from app.models.user import User
+from app.models.business import BusinessCheck
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
