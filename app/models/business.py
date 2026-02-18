@@ -13,7 +13,7 @@ class BusinessCheck(Base):
 
     id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tax_id: Mapped[str] = mapped_column(String(20), index=True, nullable=False)     # NIP, index=True for most searched values
-    company_name: Mapped[str] = mapped_column(String(255))
+    company_name: Mapped[str] = mapped_column(String(255), nullable=True)
     is_vat_active: Mapped[bool] = mapped_column(Boolean, default=False)
     # Field for the rest answer
     raw_data: Mapped[dict] = mapped_column(JSONB, nullable=False)    # JSONB (binary) takes more space, but works faster
