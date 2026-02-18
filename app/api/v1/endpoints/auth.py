@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Request
 
 from app.schemas.user import UserCreate, UserOut
-from app.db.deps import get_db, get_current_user, oauth2_scheme
+from app.db.deps import get_db, get_current_user
 from app.models.user import User
 from app.core.security import pwd_context, verify_password
 from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token

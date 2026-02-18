@@ -1,18 +1,20 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from app.schemas.business import BusinessCheckOut, BusinessCheckCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.deps import get_db, get_current_user
 from app.models.user import User
 from app.models.business import BusinessCheck
-from app.services.basic_service import check_vies_vat
+from app.services.vies_service import check_vies_vat
 from sqlalchemy import select, func, desc
-from fastapi import HTTPException, status
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 
 @router.post("/validate", response_model=BusinessCheckOut)  # Prevents from returning all data about business from db
+@limiter.limit("10/minute")
 async def validate_business(
+    request: Request,
     check_in: BusinessCheckCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -39,7 +41,9 @@ async def validate_business(
 
 
 @router.get("/history", response_model=list[BusinessCheckOut])
+@limiter.limit("30/minute")
 async def get_user_history(
+    request: Request,
     # Settings for pagination
     skip: int = 0,     # Start from 0
     limit: int = 10,    # Inspect 10 records at once
@@ -65,7 +69,9 @@ async def get_user_history(
 
 
 @router.get("/stats/me", description="Get statistics of your searches")
+@limiter.limit("30/minute")
 async def get_stats_me(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -85,9 +91,9 @@ async def get_stats_me(
     result_most = await db.execute(query_most_searched)
 
     row = result_most.first()   # Getting a row to extract the data
-    
+
     most_searched_data = None
-    
+
     if row:
         most_searched_data = {
             "tax_id": row.tax_id,
@@ -123,8 +129,6 @@ async def get_stats_me(
             "tax_id": row_activity.tax_id,
             "check_date": row_activity.date
         }
-
-    # result = result_prep.scalars().all()
 
     return {
         "total_searches": count,
