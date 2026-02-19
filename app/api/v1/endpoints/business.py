@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.business import BusinessCheck
 from app.services.vies_service import check_vies_vat
 from sqlalchemy import select, func, desc
+from datetime import datetime, timezone, timedelta
 from app.core.limiter import limiter
 
 router = APIRouter()
@@ -22,16 +23,42 @@ async def validate_business(
 
     nip = check_in.tax_id
 
-    result = check_vies_vat("PL", nip)
-    # nip validaton on outer service
-
-    new_record = BusinessCheck(
-        tax_id=nip,
-        company_name=result.get("name"),
-        is_vat_active=result.get("is_valid"),
-        owner_id=current_user.id,
-        raw_data=result,
+    # If result is in a base and new there is no need to create new API request
+    time_ago = datetime.now(timezone.utc) - timedelta(days=10)
+    query = (
+        select(BusinessCheck)
+        .where(BusinessCheck.tax_id == nip, BusinessCheck.created_at > time_ago)
+        .order_by(BusinessCheck.created_at.desc())
+        .limit(1)
     )
+
+    result_db_check = await db.execute(query)
+    result_from_db = result_db_check.scalar_one_or_none()
+
+    if result_from_db:
+        # Preventing possibility to see other's user ID in raw_data
+        clean_raw_data = dict(result_from_db.raw_data)
+        clean_raw_data["owner_id"] = str(current_user.id)
+
+        new_record = BusinessCheck(
+            tax_id=nip,
+            company_name=result_from_db.company_name,
+            is_vat_active=result_from_db.is_vat_active,
+            owner_id=current_user.id,
+            raw_data=clean_raw_data,
+        )
+
+    else:
+        api_data = check_vies_vat("PL", nip)
+        # nip validaton on outer service
+
+        new_record = BusinessCheck(
+            tax_id=nip,
+            company_name=api_data.get("name"),
+            is_vat_active=api_data.get("is_valid"),
+            owner_id=current_user.id,
+            raw_data=api_data,
+        )
 
     db.add(new_record)
     await db.commit()
