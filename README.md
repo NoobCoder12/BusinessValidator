@@ -1,60 +1,60 @@
-# Reminder App (v1.0)
+# Business Verification API (v1.0)
 
-### Backend Tests
+### Backend API
 
-**Reminder App**
+**Business Verification API**
 
-A reminder application with email notifications. Built to explore FastAPI and learn how to integrate background task processing with Celery.
+A robust business verification application with VAT validation via VIES. Built to explore FastAPI and learn how to integrate external SOAP services and handle rate limiting.
 
 ### Why this stack?
 
-I wanted to get hands-on with FastAPI and see how it handles operations using endpoints and background tasks. Since FastAPI doesn't use templates like Django or Flask, I paired it with React for the frontend — this kept the backend focused purely on API logic.
+I wanted to get hands-on with FastAPI and see how it handles high-performance operations using endpoints and database integration. Since this project focuses on reliability and external service communication, I used PostgreSQL for persistence and SlowAPI to manage traffic — this keeps the backend focused purely on data integrity and security.
 
 The project taught me:
-- How to structure FastAPI application
-- Working with Celery for scheduled tasks
-- Managing timezones properly (UTC in backend, local time in frontend)
-- Creating basic frontend using React
+- How to structure a professional FastAPI application
+- Working with legacy SOAP services (VIES) using Zeep
+- Managing database migrations with Alembic
+- Implementing secure JWT-based authentication
+- Protecting endpoints with rate limiting
 
 ### Features
 
-- Create reminders with title, description, deadline and email
-- Choose when to get notified:
-    - 15 minutes before
-    - 1 hour before
-    - 1 day before
-- Automatic email notifications via Celery Beat:
-    - Tasks are checked/sent every minute by default (can be edited in `backend/app/config/celery_app.py`)
-    - All times stored in UTC, displayed in local timezone
+- **Validate Business**: Verify tax IDs (NIP) against the official VIES service.
+- **Search History**: View your past verification requests with pagination.
+- **Usage Statistics**: Get insights into your activity:
+    - Total searches count
+    - Most searched tax IDs
+    - Active VAT status percentage
+- **Rate Limiting**:
+    - Automatic protection (e.g., 10/minute for validation)
+    - All times handled in UTC
+- **Secure Access**: Fully authenticated endpoints using JWT tokens.
 
 ### Tech Stack
 
 #### Backend
 - FastAPI
-- SQLAlchemy (SQLite)
-- Celery + Redis
+- SQLAlchemy (PostgreSQL)
+- Zeep (SOAP client)
 - Pydantic for validation
-- Pytest
-
-#### Frontend
-- React
+- SlowAPI for rate limiting
+- Alembic for migrations
 
 #### Infrastructure
 - Docker
+- PostgreSQL
 
 ### Testing & Quality Assurance
 
-To ensure the reliability of the API and database operations the project includes a comprehensive test suite:
-- **Integrations Tests**: Built with Pytest, covering the full CRUD lifecycle
-- **API Simulation**: Uses FastAPI's TestClient with httpx to simulate real-world requests
-- **Isolated Database**: Tests run on separate, temporary SQLite database to ensure no side effects on development base
-- **CI/CD Pipeline**: Automated testing via GitHub Actions. Every push and pull request triggers the test suite on clean Linux environment.
-- **Note on Celery Testing**: Background workers and email tasks are currently excluded from the integration suite to keep the CI pipeline lightweight. These components are verified through manual end-to-end testing with a Redis broker.
+To ensure the reliability of the API and database operations the project includes a planned comprehensive test suite:
+- **Integration Tests**: (Planned for v2.0) covering the full validation lifecycle
+- **API Simulation**: Using FastAPI's TestClient to simulate real-world requests
+- **Isolated Database**: Configured to run on separate environments for safe testing
+- **Note on current state**: Verification is currently done through manual end-to-end testing and logging. Automated CI/CD with GitHub Actions is prepared for the next release.
 
-To run tests locally:
+To run the application locally:
 ```bash
-cd backend
-pytest --cov=app --cov-report=term-missing
+docker compose up --build
 ```
 
 ### Quick Start
@@ -62,97 +62,73 @@ pytest --cov=app --cov-report=term-missing
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd Reminder
+   cd <repository-directory>
    ```
 
 2. **Set up environment variables**
    Create a `.env` file in the root directory:
    ```env
-   MAIL_HOST=smtp.gmail.com
-   MAIL_USERNAME=your_email@gmail.com
-   MAIL_PASSWORD=your_app_password
-   MAIL_PORT=587
-   ```
-   *Note: Password should be app password, not the one you use to log in to Gmail.*
-   [Learn more about app passwords](https://support.google.com/mail/answer/185833?hl=en#zippy=)
+   POSTGRES_USER=admin
+   POSTGRES_PASSWORD=yourpassword
+   POSTGRES_SERVER=db
+   POSTGRES_DB=business_db
 
-3. **Run FastAPI to create database:**
-   ```bash
-   cd backend/app
-   fastapi dev main.py
-   ```
-   After seeing "test.db" in `db/` press CTRL + C to close the server.
+   JWT_SECRET_KEY=your_secret_key_here
+   JWT_ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE=30
 
-4. **Run with Docker**
+   REFRESH_TOKEN_KEY=your_refresh_secret_key_here
+   REFRESH_ACCESS_TOKEN_EXPIRE=60
+   ```
+
+3. **Initialize the database**
    ```bash
+   # Run with docker
    docker compose up --build
    ```
 
 The app will be available at:
-- **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
 ### Project Structure
 
 ```
-├── .github/workflows/
-│   └── tests.yml           # Config file for GitHub Actions
-│
-├── backend/
-│   ├── app/
-│   │   ├── config/
-│   │   ├── main.py         # FastAPI routes
-│   │   ├── schemas.py      # Pydantic models
-│   │   ├── send_mail.py    # Email logic
-│   │   └── tasks.py        # Celery tasks
-│   │
-│   ├── db/
-│   │   ├── models.py       # SQLAlchemy models
-│   │   ├── crud.py         # Database operations
-│   │   └── base.py         # DB connection
-│   │
-│   ├── tests/
-│   │   ├── conftest.py     # Config file with fixtures
-│   │   └── test_api.py     # File with tests
-│   │
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── pytest.ini          # Config file for pytest
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-│
+├── alembic/                # Database migration scripts
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       └── endpoints/  # API route handlers
+│   ├── core/               # Configuration, security, and logging
+│   ├── db/                 # Database session and deps
+│   ├── models/             # SQLAlchemy database models
+│   ├── schemas/            # Pydantic models
+│   ├── services/           # VIES and health services
+│   └── main.py             # FastAPI entry point
+├── alembic.ini             # Alembic configuration
 ├── docker-compose.yml
-├── .env
+├── .env.example
+├── requirements.txt
 └── README.md
 ```
 
 ### What I learned?
 
 - FastAPI makes building API surprisingly straightforward
-- Celery Beat is perfect for recurring tasks, but need careful timezone handling for tasks connected with time
-- Docker is great for managing multiple services, especially when each one of them needs command to start in different terminal
-- SQLite is fine for development, but production may need PostgreSQL
-- Creating basic layout with React and its structure
+- SOAP services can be tricky, but Zeep simplifies the integration significantly
+- Docker is great for managing multiple services, especially PostgreSQL setups
+- Alembic is essential for managing database schema evolutions
+- Rate limiting is crucial for public-facing APIs to prevent abuse
 
 ### Future Improvements (Roadmap v2.0)
 
-Planned features for the next version:
-- **API Key**: Implementation of API key authentication.
-- **Redis Caching**: Integration of Redis for high-performance caching.
-- **Rate Limit Display**: Real-time display of remaining rate limit quota.
-- **Comprehensive Testing**: Full test suite expansion with Pytest.
-- **User Authentication**: Ensuring reminders are private to each user.
-- **PostgreSQL**: Migration from SQLite to PostgreSQL for production use.
-- **Mobile Notifications**: Sending alerts directly to mobile phones.
-- **Better Error Handling**: Improved validation and user feedback.
-- **Deployment**: Full production deployment setup.
+Things I'd add in the next version:
+- **API Key**: Support for static API keys for service-to-service communication.
+- **Redis Caching**: Caching VIES responses to speed up repeated lookups.
+- **Rate Limit Headers**: Displaying `X-RateLimit-Remaining` to the user.
+- **Pytest Suite**: Implementing full unit and integration test coverage.
+- **Sentry**: Better error tracking and production monitoring.
+- **Async VIES**: Refactoring the SOAP client for asynchronous operations.
 
 ### License
 
