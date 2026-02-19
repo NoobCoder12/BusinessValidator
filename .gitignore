@@ -12,6 +12,11 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
+*.log
+.cache/
+.mypy_cache/
+.ruff_cache/
 
 # System
 .DS_Store
@@ -23,3 +28,4 @@ Thumbs.db
 
 # Database
 postgres_data/
+docker_data/
