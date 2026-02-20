@@ -2,6 +2,8 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
+> **Version:** 1.1
+
 ---
 
 ## Why this project?
@@ -14,16 +16,30 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - Managing database schema changes with Alembic
 - Implementing JWT-based authentication (access + refresh tokens)
 - Protecting public endpoints with rate limiting
+- Generating and verifying hashed API keys as an alternative authentication method
 
 ---
 
 ## Features
 
-- **Business Validation** — verify a NIP against the official VIES service
-- **Search History** — paginated list of past verification requests
-- **Usage Statistics** — total searches, most searched NIPs, active VAT percentage
+- **Business Validation** — verify a NIP against the official VIES service (requires API Key)
+- **Search History** — paginated list of past verification requests (requires API Key)
+- **Usage Statistics** — total searches, most searched NIPs, active VAT percentage (requires API Key)
 - **Rate Limiting** — 10 requests/minute on validation endpoints (UTC)
-- **JWT Auth** — all endpoints protected with access and refresh tokens
+- **JWT Auth** — user account management endpoints (register, login, token refresh)
+
+---
+
+## Authentication
+
+**JWT** — used for user account management.
+
+**API Key** — required for all /business/ endpoints. Pass it via the `X-API-Key` header.
+
+Generate a key (JWT required):
+POST /api/v1/users/me/api-key
+
+The raw key is returned once — store it securely. Only a bcrypt hash is saved in the database. Calling the endpoint again rotates the key.
 
 ---
 
@@ -101,14 +117,25 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ---
 
-## Roadmap (v2.0)
+## Roadmap (v1.5)
 
-- **API Key support** — static keys as an alternative to JWT for service-to-service communication
 - **Redis caching** — cache VIES responses to avoid redundant external calls
 - **Rate limit headers** — expose `X-RateLimit-Remaining` so clients know their usage
 - **Pytest suite** — unit and integration test coverage
 - **Async VIES** — the current SOAP client is synchronous and blocks the event loop, worth fixing
 - **Sentry** — error tracking for production monitoring
+
+---
+
+## Changelog
+
+### v1.1
+- All /business/ endpoints (validation, history, statistics) now use API Key only
+- Keys generated via `POST /api/v1/users/me/api-key` (JWT required)
+- Hashed with bcrypt, never stored in plaintext
+
+### v1.0
+- Initial release
 
 ---
 
