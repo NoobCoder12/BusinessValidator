@@ -11,6 +11,7 @@ from app.core.security import pwd_context, verify_password, get_password_hash
 from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token, generate_new_api_key
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.core.logging import logger
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
     exisiting_user = result.scalar_one_or_none()    # Returns one or none, error if more
 
     if exisiting_user:
+        logger.warning(f"Email duplicate for user {exisiting_user.username}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # User passed email check
@@ -37,6 +39,8 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)  # Gets ID from DB
+
+    logger.info(f"User {new_user.username} has registered and data was saved to DB")
 
     return new_user
 
