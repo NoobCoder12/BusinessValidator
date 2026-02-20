@@ -151,6 +151,7 @@ async def create_user_api_key(
     await db.commit()
     await db.refresh(current_user)
 
+    logger.info(f"User {current_user.username} created API Key and save it in DB")
     return {
         "api_key": raw_key
     }
