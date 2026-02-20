@@ -8,6 +8,7 @@ from app.services.vies_service import check_vies_vat
 from sqlalchemy import select, func, desc
 from datetime import datetime, timezone, timedelta
 from app.core.limiter import limiter
+from app.core.logging import logger
 
 router = APIRouter()
 
@@ -48,6 +49,8 @@ async def validate_business(
             raw_data=clean_raw_data,
         )
 
+        logger.info(f"Data requested from DB for user: {current_user.username}")
+
     else:
         api_data = check_vies_vat("PL", nip)
         # nip validaton on outer service
@@ -60,10 +63,13 @@ async def validate_business(
             raw_data=api_data,
         )
 
+        logger.info(f"Data requested from API for user: {current_user.username}")
+
     db.add(new_record)
     await db.commit()
     await db.refresh(new_record)
 
+    logger.info(f"Check was created and saved in DB for user: {current_user.username}")
     return new_record
 
 
@@ -92,6 +98,7 @@ async def get_user_history(
     if not checks:
         return []
 
+    logger.info(f"History was retrieved from DB for user: {current_user.username}")
     return checks
 
 
@@ -157,6 +164,7 @@ async def get_stats_me(
             "check_date": row_activity.date
         }
 
+    logger.info(f"Stats were retrieved from DB for user: {current_user.username}")
     return {
         "total_searches": count,
         "most_searched": most_searched_data,
