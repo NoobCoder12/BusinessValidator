@@ -19,7 +19,7 @@ class BusinessCheck(Base):
     raw_data: Mapped[dict] = mapped_column(JSONB, nullable=False)    # JSONB (binary) takes more space, but works faster
 
     # For Database Caching
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())   # server_default=func.now() uses Postgres exact time, same for all records
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())   # server_default=func.now() uses Postgres exact time, same for all records
     owner_id: Mapped[PyUUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     # For relation with users table, like related_name in Django
