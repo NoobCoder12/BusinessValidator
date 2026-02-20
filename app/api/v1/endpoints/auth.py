@@ -25,6 +25,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
     exisiting_user = result.scalar_one_or_none()    # Returns one or none, error if more
 
     if exisiting_user:
+        logger.warning(f"Duplicating email for user: {exisiting_user.username}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # User passed email check
