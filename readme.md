@@ -101,7 +101,7 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ---
 
-## Roadmap (v2.0)
+## Roadmap (v1.5)
 
 - **API Key support** — static keys as an alternative to JWT for service-to-service communication
 - **Redis caching** — cache VIES responses to avoid redundant external calls
