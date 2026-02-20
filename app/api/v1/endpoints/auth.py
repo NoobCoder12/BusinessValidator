@@ -7,8 +7,8 @@ from fastapi import Request
 from app.schemas.user import UserCreate, UserOut
 from app.db.deps import get_db, get_current_user
 from app.models.user import User
-from app.core.security import pwd_context, verify_password
-from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token
+from app.core.security import pwd_context, verify_password, get_password_hash
+from app.core.auth import create_access_token, create_refresh_token, verify_refresh_token, generate_new_api_key
 from app.core.config import settings
 from app.core.limiter import limiter
 
@@ -125,7 +125,23 @@ async def logout(response: Response):
         secure=False,               # TODO: Change for True while deploying
         samesite="lax"              # Prevents CSRF
     )
-    
+
     return {"detail": "Successfully logged out"}
 
-    
+
+@router.post("/me/api-key", description="Endpoint to get API Key")
+async def create_user_api_key(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    raw_key = generate_new_api_key()
+
+    current_user.api_key_hashed = get_password_hash(raw_key)    # Same function as for password
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    return {
+        "api_key": raw_key
+    }
