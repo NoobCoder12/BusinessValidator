@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from app.schemas.business import BusinessCheckOut, BusinessCheckCreate
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.deps import get_db, get_current_user
+from app.db.deps import get_db, get_current_user, get_user_by_api_key
 from app.models.user import User
 from app.models.business import BusinessCheck
 from app.services.vies_service import check_vies_vat
@@ -19,7 +19,7 @@ async def validate_business(
     request: Request,
     check_in: BusinessCheckCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_user_by_api_key)
 ):
 
     nip = check_in.tax_id
@@ -81,7 +81,7 @@ async def get_user_history(
     skip: int = 0,     # Start from 0
     limit: int = 10,    # Inspect 10 records at once
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_user_by_api_key)
 ):
 
     query = (
@@ -107,7 +107,7 @@ async def get_user_history(
 async def get_stats_me(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_user_by_api_key)
 ):
     # Query for all searches count
     query = select(func.count(BusinessCheck.id)).where(BusinessCheck.owner_id == current_user.id)

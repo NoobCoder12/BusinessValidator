@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from app.db.session import AsyncSessionLocal
 from app.models.user import User
-from app.core.auth import decode_access_token
+from app.core.auth import decode_access_token, api_key_header, verify_api_key_hash
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets Bearer and Token from Authorization header and passes to function
@@ -43,3 +43,23 @@ async def get_current_user(
         raise cred_exception
 
     return user
+
+
+async def get_user_by_api_key(
+    db: AsyncSession = Depends(get_db),
+    api_key: str = Depends(api_key_header)
+) -> User:
+
+    query = select(User).where(User.api_key_hashed != None)     # Get users with API Key first
+    result = await db.execute(query)
+    users = result.scalars().all()
+
+    for user in users:
+        is_valid = verify_api_key_hash(api_key, user.api_key_hashed)    # verify() gets hashing metod and recreates it
+        if is_valid:
+            return user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid API Key"
+    )

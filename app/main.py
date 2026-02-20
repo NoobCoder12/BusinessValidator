@@ -5,7 +5,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from app.core.logging import logger, setup_logging
 
-setup_logging() # Logger starts with an app
+setup_logging()  # Logger starts with an app
 
 app = FastAPI()
 
