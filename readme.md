@@ -53,6 +53,8 @@ The raw key is returned once — store it securely. Only a bcrypt hash is saved 
 
 ## Quick Start
 
+> Note: PostgreSQL runs in Docker. FastAPI and Alembic run locally in a virtual environment.
+
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/NoobCoder12/BusinessValidator.git
@@ -65,20 +67,41 @@ Create a `.env` file in the root directory:
 ```env
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=yourpassword
-POSTGRES_SERVER=db
+POSTGRES_SERVER=localhost
 POSTGRES_DB=business_db
 
 JWT_SECRET_KEY=your_secret_key_here
 JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE=30
+ACCESS_TOKEN_EXPIRE=minutes
 
 REFRESH_TOKEN_KEY=your_refresh_secret_key_here
-REFRESH_ACCESS_TOKEN_EXPIRE=60
+REFRESH_ACCESS_TOKEN_EXPIRE=days
 ```
 
-### 3. Run with Docker
+### 3. Run Docker
 ```bash
-docker compose up --build
+docker compose up -d --build
+```
+
+### 4. Create and activate Virtual Environment
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 5. Install requirements
+```
+pip install -r requirements.txt
+```
+
+### 6. Create DB migrations
+```
+alembic upgrade head
+```
+
+### 7. Run API from root directory
+```
+uvicorn app.main:app --reload
 ```
 
 The API will be available at:
