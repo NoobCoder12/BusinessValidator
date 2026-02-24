@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 from app.schemas.business import BusinessCheckOut, BusinessCheckCreate
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.deps import get_db, get_current_user, get_user_by_api_key
+import redis.asyncio as redis
+from app.db.deps import get_db, get_user_by_api_key, get_redis
 from app.models.user import User
 from app.models.business import BusinessCheck
 from app.services.vies_service import check_vies_vat
@@ -9,6 +10,7 @@ from sqlalchemy import select, func, desc
 from datetime import datetime, timezone, timedelta
 from app.core.limiter import limiter
 from app.core.logging import logger
+import json
 
 router = APIRouter()
 
@@ -19,52 +21,97 @@ async def validate_business(
     request: Request,
     check_in: BusinessCheckCreate,
     db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
     current_user: User = Depends(get_user_by_api_key)
 ):
 
     nip = check_in.tax_id
+    cache_key = f"bus:v1:{nip}"      # Key for Redis, all keys are in the same place
+    data = None
 
-    # If result is in a base and new there is no need to create new API request
-    time_ago = datetime.now(timezone.utc) - timedelta(days=10)
-    query = (
-        select(BusinessCheck)
-        .where(BusinessCheck.tax_id == nip, BusinessCheck.created_at > time_ago)
-        .order_by(BusinessCheck.created_at.desc())
-        .limit(1)
-    )
+    # Check redis first, no need to do API request if result is in base
+    try:
+        cached_val = await redis_client.get(cache_key)
+        if cached_val:
+            data = json.loads(cached_val)
+            logger.info(f"Data retrieved from Redis by {current_user.email} for {nip}")
 
-    result_db_check = await db.execute(query)
-    result_from_db = result_db_check.scalar_one_or_none()
+    except Exception as e:
+        logger.warning(f"Error while fetching data from Redis: {e}")
 
-    if result_from_db:
-        # Preventing possibility to see other's user ID in raw_data
-        clean_raw_data = dict(result_from_db.raw_data)
-        clean_raw_data["owner_id"] = str(current_user.id)
-
-        new_record = BusinessCheck(
-            tax_id=nip,
-            company_name=result_from_db.company_name,
-            is_vat_active=result_from_db.is_vat_active,
-            owner_id=current_user.id,
-            raw_data=clean_raw_data,
+    # If there is no result in redis
+    if not data:
+        time_ago = datetime.now(timezone.utc) - timedelta(days=10)
+        query = (
+            select(BusinessCheck)
+            .where(BusinessCheck.tax_id == nip, BusinessCheck.created_at > time_ago)
+            .order_by(BusinessCheck.created_at.desc())
+            .limit(1)
         )
 
-        logger.info(f"Data requested from DB for user: {current_user.username}")
+        result_db_check = await db.execute(query)
+        result_from_db = result_db_check.scalar_one_or_none()
 
-    else:
-        api_data = check_vies_vat("PL", nip)
+        if result_from_db:
+            # Preventing possibility to see other's user ID in raw_data
+            data = {
+                "name": result_from_db.company_name,
+                "vat_number": result_from_db.tax_id,
+                "is_valid": result_from_db.is_vat_active
+            }
+
+            # We don't want to refresh 10 days
+            expiration_date = result_from_db.created_at + timedelta(days=10)
+            remaining_time = expiration_date - datetime.now(timezone.utc)
+
+            ttl_seconds = int(remaining_time.total_seconds())
+
+            if ttl_seconds > 0:
+                # Save result to redis for next request
+                try:
+                    await redis_client.setex(       # setex(key, exp, value)
+                        cache_key,
+                        ttl_seconds,
+                        json.dumps(data)
+                    )
+                    logger.info(f"Result for ID {nip} saved to redis")
+                except Exception as e:
+                    logger.warning(f"Could not save result to redis: {e}")
+
+            logger.info(f"Data requested from DB for user: {current_user.username}")
+
+    # API request if no result in redis and DB
+    if not data:
+        data = check_vies_vat("PL", nip)
         # nip validaton on outer service
+        logger.info(f"Data requested from API by {current_user.username} for {nip}")
 
-        new_record = BusinessCheck(
-            tax_id=nip,
-            company_name=api_data.get("name"),
-            is_vat_active=api_data.get("is_valid"),
-            owner_id=current_user.id,
-            raw_data=api_data,
-        )
+        # Save result to redis for next request
+        try:
+            await redis_client.setex(       # setex(key, exp, value)
+                cache_key,
+                timedelta(days=10),
+                json.dumps(data)
+            )
+            logger.info(f"Result for ID {nip} saved to redis")
+        except Exception as e:
+            logger.warning(f"Could not save result to redis: {e}")
 
         logger.info(f"Data requested from API for user: {current_user.username}")
 
+    # Making sure that user id will be correct
+    clean_data = dict(data)
+    clean_data["owner_id"] = str(current_user.id)
+
+    new_record = BusinessCheck(
+        tax_id=nip,
+        company_name=data.get("name"),
+        is_vat_active=data.get("is_valid"),
+        owner_id=current_user.id,
+        raw_data=clean_data,
+    )
+
+    # Save result to DB
     db.add(new_record)
     await db.commit()
     await db.refresh(new_record)
