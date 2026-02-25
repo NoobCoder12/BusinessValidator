@@ -5,15 +5,34 @@ from fastapi.security import OAuth2PasswordBearer
 from app.db.session import AsyncSessionLocal
 from app.models.user import User
 from app.core.auth import decode_access_token, api_key_header, verify_api_key_hash
+import redis.asyncio as redis
+from typing import AsyncGenerator
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets Bearer and Token from Authorization header and passes to function
+
+# Connection Pooling for Redis requests
+redis_pool = redis.ConnectionPool.from_url("redis://localhost:6379", decode_responses=True)
 
 
 async def get_db():
     # async with will close session after finish
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# [] means it created sort of things between the brackets
+# First argument is what we generate with yield
+# Second argument in [] means value that we return - we don't need to return anything
+async def get_redis() -> AsyncGenerator[redis.Redis, None]:
+    """
+    Creating a client for pooling
+    """
+    client = redis.Redis(connection_pool=redis_pool)
+    try:
+        yield client
+    finally:
+        await client.aclose()
 
 
 async def get_current_user(

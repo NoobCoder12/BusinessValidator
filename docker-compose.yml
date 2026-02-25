@@ -11,3 +11,34 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Bridge for DB
+
+  redis:
+    image: redis:latest
+    container_name: my-redis
+    ports:
+    - "6379:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_gui
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@test.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redis_gui
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
+# Managed volume to persist data after 'docker-compose down'
+volumes:
+  postgres_data:
