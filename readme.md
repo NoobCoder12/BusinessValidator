@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.1
+> **Version:** 1.2
 
 ---
 
@@ -27,6 +27,8 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - **Usage Statistics** — total searches, most searched NIPs, active VAT percentage (requires API Key)
 - **Rate Limiting** — 10 requests/minute on validation endpoints (UTC)
 - **JWT Auth** — user account management endpoints (register, login, token refresh)
+- **Redis caching** — cache VIES responses to avoid redundant external calls
+- **GUI** for redis and pgadmin
 
 ---
 
@@ -108,6 +110,10 @@ The API will be available at:
 - **API**: http://localhost:8000
 - **Swagger Docs**: http://localhost:8000/docs
 
+GUI will be available at:
+- **pgadmin**: http://localhost:5050
+- **redis**: http://localhost:5540
+
 ---
 
 ## Project Structure
@@ -142,7 +148,6 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ## Roadmap (v1.5)
 
-- **Redis caching** — cache VIES responses to avoid redundant external calls
 - **Rate limit headers** — expose `X-RateLimit-Remaining` so clients know their usage
 - **Pytest suite** — unit and integration test coverage
 - **Async VIES** — the current SOAP client is synchronous and blocks the event loop, worth fixing
@@ -151,6 +156,10 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 ---
 
 ## Changelog
+
+### v1.2
+- Redis caching to avoid external API calls
+- Docker container with pgadmin and redis insight as GUI
 
 ### v1.1
 - All /business/ endpoints (validation, history, statistics) now use API Key only
