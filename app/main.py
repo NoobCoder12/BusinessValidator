@@ -1,13 +1,26 @@
 from fastapi import FastAPI
+import sentry_sdk
 from app.api.v1.endpoints import auth, business, status
 from app.core.limiter import limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from app.core.logging import logger, setup_logging
+from app.core.config import settings
+
 
 setup_logging()  # Logger starts with an app
 
+sentry_sdk.init(
+    dsn=settings.SENTRY_URL,
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    traces_sample_rate=1.0,     # Monitor all requests
+    send_default_pii=True,
+)
+
+
 app = FastAPI()
+
 
 logger.info("Application startup: Logging configured successfully")
 

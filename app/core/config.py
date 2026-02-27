@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_KEY: str
     REFRESH_ACCESS_TOKEN_EXPIRE: int
 
+    SENTRY_URL: str
+
     @property   # method is used as variable
     def DATABASE_URL(self) -> str:
         """
