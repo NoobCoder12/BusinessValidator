@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.2
+> **Version:** 1.3
 
 ---
 
@@ -39,7 +39,7 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 **API Key** — required for all /business/ endpoints. Pass it via the `X-API-Key` header.
 
 Generate a key (JWT required):
-POST /api/v1/users/me/api-key
+POST /api/v1/auth/me/api-key
 
 The raw key is returned once — store it securely. Only a bcrypt hash is saved in the database. Calling the endpoint again rotates the key.
 
@@ -55,7 +55,7 @@ The raw key is returned once — store it securely. Only a bcrypt hash is saved 
 
 ## Quick Start
 
-> Note: PostgreSQL runs in Docker. FastAPI and Alembic run locally in a virtual environment.
+> Note: The entire stack (API, Database, Redis, and Alembic) is fully containerized. No local Python installation is required to run the app.
 
 ### 1. Clone the repository
 ```bash
@@ -69,41 +69,24 @@ Create a `.env` file in the root directory:
 ```env
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=yourpassword
-POSTGRES_SERVER=localhost
+POSTGRES_SERVER=db
 POSTGRES_DB=business_db
 
 JWT_SECRET_KEY=your_secret_key_here
 JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE=minutes
+
+# Value must be int (e.g. 30)
+ACCESS_TOKEN_EXPIRE=30
 
 REFRESH_TOKEN_KEY=your_refresh_secret_key_here
-REFRESH_ACCESS_TOKEN_EXPIRE=days
+
+# Value must be int (e.g. 7)
+REFRESH_ACCESS_TOKEN_EXPIRE=7
 ```
 
 ### 3. Run Docker
 ```bash
 docker compose up -d --build
-```
-
-### 4. Create and activate Virtual Environment
-```
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 5. Install requirements
-```
-pip install -r requirements.txt
-```
-
-### 6. Create DB migrations
-```
-alembic upgrade head
-```
-
-### 7. Run API from root directory
-```
-uvicorn app.main:app --reload
 ```
 
 The API will be available at:
@@ -128,6 +111,8 @@ GUI will be available at:
 │   ├── services/           # VIES integration, health checks
 │   └── main.py             # Entry point
 ├── docker-compose.yml
+├── Dockerfile
+├── .dockerignore
 ├── .env.example
 ├── requirements.txt
 └── README.md
@@ -146,7 +131,7 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ---
 
-## Roadmap (v1.5)
+## Roadmap (v1.6)
 
 - **Rate limit headers** — expose `X-RateLimit-Remaining` so clients know their usage
 - **Pytest suite** — unit and integration test coverage
@@ -157,13 +142,17 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ## Changelog
 
+### v1.3
+- Docker container for FastAPI
+- User registration fix
+
 ### v1.2
 - Redis caching to avoid external API calls
 - Docker container with pgadmin and redis insight as GUI
 
 ### v1.1
 - All /business/ endpoints (validation, history, statistics) now use API Key only
-- Keys generated via `POST /api/v1/users/me/api-key` (JWT required)
+- Keys generated via `POST /api/v1/auth/me/api-key` (JWT required)
 - Hashed with bcrypt, never stored in plaintext
 
 ### v1.0
