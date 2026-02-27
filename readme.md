@@ -28,7 +28,7 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - **Rate Limiting** — 10 requests/minute on validation endpoints (UTC)
 - **JWT Auth** — user account management endpoints (register, login, token refresh)
 - **Redis caching** — cache VIES responses to avoid redundant external calls
-- **GUI** for redis and pgadmin
+- **GUI** - for redis and pgadmin
 
 ---
 
@@ -122,7 +122,7 @@ GUI will be available at:
 
 ## Testing
 
-Currently verified through manual end-to-end testing. A full automated suite is planned for v2.0:
+Currently verified through manual end-to-end testing. A full automated suite is planned for v1.6:
 
 - Integration tests using FastAPI's `TestClient`
 - Isolated test database
