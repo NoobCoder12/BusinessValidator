@@ -110,7 +110,7 @@ async def read_user_me(current_user: User = Depends(get_current_user)):
 @router.post("/refresh")
 async def refresh_access_token(
     db: AsyncSession = Depends(get_db),
-    refresh_token: str = Cookie(None)       # FastAPI will look for refresh_token, it is optional. 
+    refresh_token: str = Cookie(None)       # FastAPI will look for refresh_token, it is optional
 ):
     if not refresh_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token found")  # Valid message thanks to None in Cookie
