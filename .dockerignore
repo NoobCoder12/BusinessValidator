@@ -1,0 +1,25 @@
+# Local libs
+venv/
+.venv/
+env/
+
+# Temp files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sensitive data
+.env
+
+# History
+.git/
+.gitignore
+.DS_Store
+.vscode/
+.idea/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/

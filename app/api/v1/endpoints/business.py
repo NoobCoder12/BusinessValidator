@@ -120,7 +120,7 @@ async def validate_business(
     return new_record
 
 
-@router.get("/history", response_model=list[BusinessCheckOut])
+@router.get("/history", response_model=list[BusinessCheckOut], summary="Get your validation history")
 @limiter.limit("30/minute")
 async def get_user_history(
     request: Request,
@@ -149,7 +149,7 @@ async def get_user_history(
     return checks
 
 
-@router.get("/stats/me", description="Get statistics of your searches")
+@router.get("/stats/me", summary="Get statistics of your searches")
 @limiter.limit("30/minute")
 async def get_stats_me(
     request: Request,
