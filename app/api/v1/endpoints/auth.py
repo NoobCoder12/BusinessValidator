@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Response, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Request
 from sqlalchemy.exc import IntegrityError
@@ -31,7 +31,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
     # User passed email check
     hashed_pass = pwd_context.hash(user_in.password)
-    target_username = user_in.nickname if user_in.nickname else user_in.email
+    target_username = user_in.username if user_in.username else user_in.email
 
     new_user = User(
         email=user_in.email,
@@ -68,7 +68,12 @@ async def login_for_access_token(
     db: AsyncSession = Depends(get_db)
 ):
 
-    query = select(User).where(User.email == form_data.username)    # username comes from OAuth2PasswordRequestForm, user provides email
+    query = select(User).where(
+        or_(    # better practice for sqlalchemy
+            User.username == form_data.username,
+            User.email == form_data.username    # username comes from OAuth2PasswordRequestForm, user provides email
+            )
+    )
     result = await db.execute(query)
     user = result.scalar_one_or_none()
 

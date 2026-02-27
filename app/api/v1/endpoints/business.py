@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from app.schemas.business import BusinessCheckOut, BusinessCheckCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as redis
@@ -18,7 +18,8 @@ router = APIRouter()
 @router.post("/validate", response_model=BusinessCheckOut)  # Prevents from returning all data about business from db
 @limiter.limit("10/minute")
 async def validate_business(
-    request: Request,
+    request: Request,       # For rate limiter
+    response: Response,     # For displaying rate limiter
     check_in: BusinessCheckCreate,
     db: AsyncSession = Depends(get_db),
     redis_client: redis.Redis = Depends(get_redis),
@@ -124,6 +125,7 @@ async def validate_business(
 @limiter.limit("30/minute")
 async def get_user_history(
     request: Request,
+    response: Response,
     # Settings for pagination
     skip: int = 0,     # Start from 0
     limit: int = 10,    # Inspect 10 records at once
@@ -153,6 +155,7 @@ async def get_user_history(
 @limiter.limit("30/minute")
 async def get_stats_me(
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_user_by_api_key)
 ):

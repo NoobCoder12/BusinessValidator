@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
                           - at least one lowercase letter
                           - at least one uppercase letter
                           - at least one digit""")
-    nickname: str | None = Field(None, description="User's public display name")    # Field is better than 'str', allows setting it up
+    username: str | None = Field(None, description="User's public display name")    # Field is better than 'str', allows setting it up
 
     @field_validator("password")
     @classmethod                        # Checks condidtions before creating class
@@ -41,7 +41,7 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: UUID
     email: EmailStr
-    nickname: str | None = None
+    username: str | None = None
 
     # model_config lets Pydantic read data from ORM objects instead of waiting for dicts
     model_config = ConfigDict(from_attributes=True)
