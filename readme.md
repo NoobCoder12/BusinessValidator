@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.3
+> **Version:** 1.4
 
 ---
 
@@ -25,7 +25,10 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - **Business Validation** — verify a NIP against the official VIES service (requires API Key)
 - **Search History** — paginated list of past verification requests (requires API Key)
 - **Usage Statistics** — total searches, most searched NIPs, active VAT percentage (requires API Key)
-- **Rate Limiting** — 10 requests/minute on validation endpoints (UTC)
+- **Rate Limiting** — 10 requests/minute on validation endpoints. Limit status is returned in every response via headers:
+    - `X-RateLimit-Limit` — maximum requests allowed per minute
+    - `X-RateLimit-Remaining` — requests left in the current window
+    - `X-RateLimit-Reset` — Unix timestamp (UTC) when the window resets
 - **JWT Auth** — user account management endpoints (register, login, token refresh)
 - **Redis caching** — cache VIES responses to avoid redundant external calls
 - **GUI** - for redis and pgadmin
@@ -133,7 +136,6 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ## Roadmap (v1.6)
 
-- **Rate limit headers** — expose `X-RateLimit-Remaining` so clients know their usage
 - **Pytest suite** — unit and integration test coverage
 - **Async VIES** — the current SOAP client is synchronous and blocks the event loop, worth fixing
 - **Sentry** — error tracking for production monitoring
@@ -141,6 +143,10 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 ---
 
 ## Changelog
+
+### v1.4
+- Added rate limit headers to responses (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`)
+- Username instead of a nickname in Pydantic
 
 ### v1.3
 - Docker container for FastAPI
