@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Request
+from sqlalchemy.exc import IntegrityError
 
 from app.schemas.user import UserCreate, UserOut
 from app.db.deps import get_db, get_current_user
@@ -30,22 +31,35 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
     # User passed email check
     hashed_pass = pwd_context.hash(user_in.password)
+    target_username = user_in.nickname if user_in.nickname else user_in.email
 
     new_user = User(
         email=user_in.email,
-        username=user_in.nickname or user_in.email.split("@")[0],
+        username=target_username,
         password=hashed_pass)
 
     db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)  # Gets ID from DB
+    try:
+        await db.commit()
+        await db.refresh(new_user)  # Gets ID from DB
+    except IntegrityError as e:
+        await db.rollback()     # Cancel failed trasaction
+        logger.error(f"Integrity error during registration: {str(e)}")
+
+        error_msg = str(e.orig).lower()
+        if "users_username_key" in error_msg:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        if "users_email_key" in error_msg:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        raise HTTPException(status_code=400, detail="Registration failed - data conflict")
 
     logger.info(f"User {new_user.username} registered and saved to DB")
 
     return new_user
 
 
-@router.post("/token")
+@router.post("/token", summary="Login with email as username if no nickname provided")
 @limiter.limit("5/minute")
 async def login_for_access_token(
     request: Request,   # Limiter needs an access to request
@@ -83,7 +97,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=UserOut, description="Get your user data")
+@router.get("/me", response_model=UserOut, summary="Get your user data")
 async def read_user_me(current_user: User = Depends(get_current_user)):
     """
     Endpoint will let you trough only with valid token.
