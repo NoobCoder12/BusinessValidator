@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.4
+> **Version:** 1.4.1
 
 ---
 
@@ -143,6 +143,9 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 ---
 
 ## Changelog
+
+### v1.4.1
+- Fixed Redis caching in Docker (incorrect localhost hostname replaced with redis service name)
 
 ### v1.4
 - Added rate limit headers to responses (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`)
