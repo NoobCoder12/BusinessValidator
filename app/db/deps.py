@@ -13,7 +13,7 @@ import sentry_sdk
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets Bearer and Token from Authorization header and passes to function
 
 # Connection Pooling for Redis requests
-redis_pool = redis.ConnectionPool.from_url("redis://localhost:6379", decode_responses=True)
+redis_pool = redis.ConnectionPool.from_url("redis://redis:6379", decode_responses=True)
 
 
 async def get_db():
