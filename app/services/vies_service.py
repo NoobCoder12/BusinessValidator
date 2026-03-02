@@ -1,6 +1,8 @@
-from zeep import Client, Transport
+from zeep import AsyncClient
 from zeep.helpers import serialize_object
 from zeep.exceptions import TransportError, Fault
+from zeep.transports import AsyncTransport
+import httpx    #
 
 # TODO: think about async if there is more requests
 
@@ -9,7 +11,7 @@ WSDL = "https://ec.europa.eu/taxation_customs/vies/services/checkVatService.wsdl
 _client = None
 
 
-def get_client():
+async def get_client():
     """
     Function created to re-initialize client in case of
     his error when zeep can't handle it alone.
@@ -18,12 +20,13 @@ def get_client():
     global _client
     if _client is None:
         # Creating Transport to set timeout for fetching data
-        client_transport = Transport(timeout=10)
-        _client = Client(wsdl=WSDL, transport=client_transport)
+        engine = httpx.AsyncClient(timeout=10)
+        client_transport = AsyncTransport(client=engine)     # Zeep needs AsyncTransport by default to work with AsyncClient
+        _client = AsyncClient(wsdl=WSDL, transport=client_transport)
     return _client
 
 
-def check_vies_vat(country: str, nip: str):
+async def check_vies_vat(country: str, nip: str):
     """
     Sends a SOAP request to VIES to validate a VAT number.
     Returns a dictionary with the company name or an error message.
@@ -31,9 +34,9 @@ def check_vies_vat(country: str, nip: str):
     global _client
 
     try:
-        client = get_client()
+        client = await get_client()
 
-        result = client.service.checkVat(countryCode=country, vatNumber=nip)
+        result = await client.service.checkVat(countryCode=country, vatNumber=nip)
 
         # Changing into dict
         result_dict = serialize_object(result)
@@ -49,7 +52,10 @@ def check_vies_vat(country: str, nip: str):
 
         return clean_data
 
-    except (TransportError, ConnectionError):
+    except (TransportError, ConnectionError, httpx.HTTPError):
+        if _client:
+            # httpx needs to be unpacked from Zeep
+            await _client.transport.client.aclose()    # Closing socket, killing zombie connections
         # Clearing out client to initialize it again
         _client = None
         return {"error": "VIES connection error"}
