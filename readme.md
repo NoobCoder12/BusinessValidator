@@ -103,6 +103,9 @@ REFRESH_TOKEN_KEY=your_refresh_secret_key_here
 
 # Value must be int (e.g. 7)
 REFRESH_ACCESS_TOKEN_EXPIRE=7
+
+# Optional
+SENTRY_URL=your_dsn_url
 ```
 
 ### 3. Run Docker
@@ -117,6 +120,24 @@ The API will be available at:
 GUI will be available at:
 - **pgadmin**: http://localhost:5050
 - **redis**: http://localhost:5540
+
+
+### 4. GUI Access (Optional)
+
+**pgAdmin**
+Default credentials: 
+- Login: `admin@test.com`
+- Password: `admin`
+
+Add a new server: 
+- host: `db`
+- port: `5432` 
+- database: from `.env` (POSTGRES_DB)
+- credentials: from `.env` (POSTGRES_USER, POSTGRES_PASSWORD)
+
+**Redis Insight**
+Add a new database: 
+- Connection URL: `redis://redis:6379`
 
 ---
 
