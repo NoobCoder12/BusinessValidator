@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.5.1
+> **Version:** 1.6.0
 
 ---
 
@@ -176,11 +176,13 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 ## Roadmap (v1.7)
 
 - **Pytest suite** — unit and integration test coverage
-- **Async VIES** — the current SOAP client is synchronous and blocks the event loop, worth fixing
 
 ---
 
 ## Changelog
+
+### v.1.6.0
+- Asynchronous requests for Zeep
 
 ### v1.5.1
 - GUI configuration instruction added to readme
