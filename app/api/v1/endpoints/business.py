@@ -83,7 +83,7 @@ async def validate_business(
 
     # API request if no result in redis and DB
     if not data:
-        data = check_vies_vat("PL", nip)
+        data = await check_vies_vat("PL", nip)
         # nip validaton on outer service
         logger.info(f"Data requested from API by {current_user.username} for {nip}")
 
