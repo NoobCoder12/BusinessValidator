@@ -2,7 +2,7 @@
 
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.4.1
+> **Version:** 1.5.0
 
 ---
 
@@ -17,6 +17,7 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - Implementing JWT-based authentication (access + refresh tokens)
 - Protecting public endpoints with rate limiting
 - Generating and verifying hashed API keys as an alternative authentication method
+- Integrating Sentry for error tracking and performance monitoring
 
 ---
 
@@ -31,7 +32,8 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
     - `X-RateLimit-Reset` — Unix timestamp (UTC) when the window resets
 - **JWT Auth** — user account management endpoints (register, login, token refresh)
 - **Redis caching** — cache VIES responses to avoid redundant external calls
-- **GUI** - for redis and pgadmin
+- **GUI** — for redis and pgadmin
+- **Sentry** — see [Monitoring](#monitoring)
 
 ---
 
@@ -52,7 +54,23 @@ The raw key is returned once — store it securely. Only a bcrypt hash is saved 
 
 **Backend:** FastAPI, SQLAlchemy, Pydantic, Zeep, SlowAPI, Alembic  
 **Database:** PostgreSQL  
-**Infrastructure:** Docker
+**Infrastructure:** Docker, Sentry
+
+---
+
+## Monitoring
+
+### Sentry Integration
+
+Integrated Sentry SDK for error tracking and performance monitoring:
+
+- SQLAlchemy and Redis integrations provide **Breadcrumbs** (query/cache history) attached to every error report
+- FastAPI dependency automatically injects user context (`ID`, `Username`) into Sentry events — passwords are filtered out
+- `traces_sample_rate: 1.0` in dev for full request tracing
+
+A global exception handler catches unhandled exceptions, reports them to Sentry, and returns a JSON response with a unique **Event ID** — making it easy to locate the exact error in the dashboard.
+
+Errors trigger an automatic email notification to the app owner.
 
 ---
 
@@ -125,7 +143,7 @@ GUI will be available at:
 
 ## Testing
 
-Currently verified through manual end-to-end testing. A full automated suite is planned for v1.6:
+Currently verified through manual end-to-end testing. A full automated suite is planned for v1.7:
 
 - Integration tests using FastAPI's `TestClient`
 - Isolated test database
@@ -134,15 +152,17 @@ Currently verified through manual end-to-end testing. A full automated suite is 
 
 ---
 
-## Roadmap (v1.6)
+## Roadmap (v1.7)
 
 - **Pytest suite** — unit and integration test coverage
 - **Async VIES** — the current SOAP client is synchronous and blocks the event loop, worth fixing
-- **Sentry** — error tracking for production monitoring
 
 ---
 
 ## Changelog
+
+### v1.5.0
+- Sentry integration for error tracking and performance monitoring
 
 ### v1.4.1
 - Fixed Redis caching in Docker (incorrect localhost hostname replaced with redis service name)

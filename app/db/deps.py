@@ -7,6 +7,7 @@ from app.models.user import User
 from app.core.auth import decode_access_token, api_key_header, verify_api_key_hash
 import redis.asyncio as redis
 from typing import AsyncGenerator
+import sentry_sdk
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets Bearer and Token from Authorization header and passes to function
@@ -61,6 +62,8 @@ async def get_current_user(
     if user is None:
         raise cred_exception
 
+    sentry_sdk.set_user({"id": user.id, "username": user.username})     # Set logging for certain user
+
     return user
 
 
@@ -76,6 +79,7 @@ async def get_user_by_api_key(
     for user in users:
         is_valid = verify_api_key_hash(api_key, user.api_key_hashed)    # verify() gets hashing metod and recreates it
         if is_valid:
+            sentry_sdk.set_user({"id": user.id, "username": user.username})
             return user
 
     raise HTTPException(

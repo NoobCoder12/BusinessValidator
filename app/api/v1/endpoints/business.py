@@ -132,7 +132,6 @@ async def get_user_history(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_user_by_api_key)
 ):
-
     query = (
         select(BusinessCheck)
         .where(BusinessCheck.owner_id == current_user.id)
