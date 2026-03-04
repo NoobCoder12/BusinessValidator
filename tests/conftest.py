@@ -54,7 +54,7 @@ async def client(test_db: AsyncSession) -> AsyncClient:
     Used to test endpoints, simulates user's action.
     """
     # Function for overriding to test database
-    def override_get_db():
+    async def override_get_db():
         yield test_db
 
     app.dependency_overrides[get_db] = override_get_db  # For test purpose switching real DB with TEST_DB

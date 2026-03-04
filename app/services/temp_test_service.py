@@ -34,7 +34,7 @@ def check_vies_vat(country: str, nip: str):
     client = Client(wsdl=WSDL)
 
     result = client.service.checkVat(countryCode=country, vatNumber=nip)
-    
+
     result_dict = serialize_object(result)
 
     return result_dict
