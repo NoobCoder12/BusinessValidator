@@ -26,13 +26,12 @@ async def test_register_user(
 @pytest.mark.auth
 async def test_register_duplicate_email(
     client: AsyncClient,
+    registered_user: dict,
     user_data: dict
 ):
     """
     Testing error for email duplication
     """
-    response = await client.post("/api/v1/auth/register", json=user_data)
-    assert response.status_code == 201
 
     user_data["username"] = "testing_email"
 
@@ -45,14 +44,12 @@ async def test_register_duplicate_email(
 @pytest.mark.auth
 async def test_register_duplicate_username(
     client: AsyncClient,
+    registered_user: dict,
     user_data: dict
 ):
     """
     Testing error for username duplication
     """
-    response = await client.post("/api/v1/auth/register", json=user_data)
-    assert response.status_code == 201
-
     user_data["email"] = "test@testing.com"
 
     response_email_error = await client.post("/api/v1/auth/register", json=user_data)

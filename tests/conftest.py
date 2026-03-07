@@ -71,8 +71,51 @@ async def client(test_db: AsyncSession) -> AsyncClient:
 
 @pytest.fixture
 def user_data():
+    """
+    Data for registration/JWT
+    """
     return {
         "email": "test@email.com",
         "password": "PasswordTest.123!",
         "username": "tester123"
     }
+
+
+@pytest.fixture
+async def registered_user(
+    client: AsyncClient,
+    user_data: dict
+):
+    """
+    Fixture for user registration.
+    Pass as argument for silent POST, in code user_data may be used.
+    """
+    response = await client.post("/api/v1/auth/register", json=user_data)
+
+    assert response.status_code == 201
+    return response.json()
+
+
+@pytest.fixture
+async def logged_user(
+    client: AsyncClient,
+    registered_user: dict,
+    user_data: dict
+):
+    """
+    Fixture for logged user header with JWT.
+    """
+    login_params = {
+        # .get("email") may be used for email as username
+        "username": user_data.get("username"),
+        "password": user_data.get("password")
+    }
+
+    response = await client.post("/api/v1/auth/token", data=login_params)
+
+    assert response.status_code == 200
+    data = response.json()
+    token = data.get("access_token")
+
+    return {"Authorization": f"Bearer {token}"}
+
