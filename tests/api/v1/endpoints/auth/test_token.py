@@ -1,6 +1,7 @@
 from httpx import AsyncClient
 import pytest
 from app.core.auth import decode_access_token, verify_refresh_token
+from datetime import datetime, timezone
 
 
 @pytest.mark.auth
@@ -28,6 +29,9 @@ async def test_token_with_username(
     assert isinstance(decoded_data, dict)
     assert decoded_data.get("sub") == str(registered_user.get("id"))
     assert data.get("token_type") == "bearer"
+    exp = decoded_data.get("exp")
+    assert exp is not None
+    assert datetime.fromtimestamp(exp, tz=timezone.utc) > datetime.now(tz=timezone.utc)
 
     # Test for refresh token
     assert "refresh_token" in response_token.cookies
