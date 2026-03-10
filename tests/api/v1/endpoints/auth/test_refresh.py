@@ -37,6 +37,9 @@ async def test_refresh_empty(
     client: AsyncClient,
     registered_user: dict
 ):
+    """
+    Test for endpoint with no refresh token
+    """
     response = await client.post("/api/v1/auth/refresh")
     assert response.status_code == 401
     data = response.json()
@@ -48,6 +51,9 @@ async def test_refresh_expired(
     client: AsyncClient,
     user_data: dict
 ):
+    """
+    Test for endpoint with expired refresh token
+    """
     # Create user for this test
     response_user = await client.post("/api/v1/auth/register", json=user_data)
     assert response_user.status_code == 201
