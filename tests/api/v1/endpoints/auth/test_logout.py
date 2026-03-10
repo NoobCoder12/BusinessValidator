@@ -26,4 +26,8 @@ async def test_logout(
     response_logout = await client.post("/api/v1/auth/logout", headers=logged_user)
     assert response_logout.status_code == 200
     cookie = response_logout.cookies.get("refresh_token")
-    assert cookie is None or cookie == ""
+    assert cookie is None or cookie == ""   # may leave empty string
+
+    # Testing if deleted
+    response_deleted = await client.post("/api/v1/auth/refresh", headers=logged_user)
+    assert response_deleted.status_code == 401

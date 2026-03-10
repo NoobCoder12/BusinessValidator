@@ -85,6 +85,9 @@ async def test_refresh_expired(
 async def test_refresh_no_user(
     client: AsyncClient
 ):
+    """
+    Test for getting refresh token as non existing user
+    """
     # Create refresh token with non-existing user
     expired_payload = {
         "sub": str(uuid.UUID("550e8400-e29b-41d4-a716-446655440000")),   # random ID
