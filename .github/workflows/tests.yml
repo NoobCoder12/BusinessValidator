@@ -1,0 +1,35 @@
+# # Config file for GitHub Actions
+# TODO
+# name: Backend Tests
+
+# on: [push, pull_request]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest  # Fastest option
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v6   # Copies code on VM
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5   # Official GitHub tool
+#         with:
+#           python-version: '3.12'
+
+#       - name: Start Database (Docker)
+#         run: docker compose up -d
+
+#       - name: Install dependencies
+#         run: |            # Everything below will be executed one by one
+#             python -m pip install --upgrade pip
+#             pip install -r requirements.txt
+
+#       - name: Wait for DB
+#         run: sleep 5    # Wait for DB setup
+
+#       - name: Run tests
+#         env:
+#           PYTHONPATH: ${{ github.workspace }}  # github.workspace is a root dir
+#         run:
+#           pytest --cov=app --cov-report=term-missing

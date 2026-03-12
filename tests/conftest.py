@@ -119,3 +119,16 @@ async def logged_user(
 
     return {"Authorization": f"Bearer {token}"}
 
+
+@pytest.fixture
+async def user_with_api_key(
+    client: AsyncClient,
+    logged_user: dict
+):
+    """
+    Fixture for user with generated API Key
+    """
+    response = await client.post("/api/v1/auth/me/api-key", headers=logged_user)
+    assert response.status_code == 200
+    data = response.json()
+    return data.get("api_key")
