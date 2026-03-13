@@ -1,5 +1,6 @@
 import pytest
 import os
+import redis.asyncio as redis
 
 # Overriding env for test purpose
 os.environ["POSTGRES_SERVER"] = "localhost"
@@ -9,7 +10,7 @@ from app.core.config import settings
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from app.db.base import Base
 from app.main import app
-from app.db.deps import get_db
+from app.db.deps import get_db, get_redis
 from httpx import AsyncClient, ASGITransport
 
 TEST_DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:5432/{settings.POSTGRES_DB}_test"
@@ -67,6 +68,28 @@ async def client(test_db: AsyncSession) -> AsyncClient:
         yield c
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def redis_client():
+    """
+    Fixture for redis client
+    """
+    client = redis.from_url("redis://localhost:6379", decode_responses=True)    # Pytest connects from localhost
+
+    async def override_get_redis():
+        yield client
+
+    app.dependency_overrides[get_redis] = override_get_redis    # Overriding for test purpose
+
+    yield client
+
+    # Clearing overrides after test
+    app.dependency_overrides.pop(get_redis, None)
+
+    # Cleaning base after test
+    await client.flushdb()
+    await client.aclose()
 
 
 @pytest.fixture
