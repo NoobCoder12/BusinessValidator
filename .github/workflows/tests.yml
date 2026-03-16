@@ -52,3 +52,4 @@ jobs:
           ENV: testing
         run: |
           pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+          
