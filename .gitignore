@@ -24,3 +24,6 @@ Thumbs.db
 
 # Database
 postgres_data/
+
+# My files
+app/services/temp_test_service.py
