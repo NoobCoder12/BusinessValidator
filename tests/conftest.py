@@ -5,6 +5,7 @@ import redis.asyncio as redis
 # Overriding env for test purpose
 os.environ["POSTGRES_SERVER"] = "localhost"
 os.environ["SENTRY_URL"] = ""
+os.environ["ENV"] = 'testing'  # For limiter
 
 from app.core.config import settings
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -155,3 +156,38 @@ async def user_with_api_key(
     assert response.status_code == 200
     data = response.json()
     return data.get("api_key")
+
+
+@pytest.fixture
+async def example_validation(
+    client: AsyncClient,
+    user_with_api_key: str,
+    mocker
+):
+    """
+    Fixture with mocked API call
+    """
+    mock_api = mocker.patch("app.api.v1.endpoints.business.check_vies_vat")
+    mock_api.return_value = {
+        'name': 'FABRYKA MEBLI BODZIO BOGDAN SZEWCZYK SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ',
+        'vat_number': '9111852372',
+        'country_code': 'PL',
+        'address': 'ul. Koszykowa 61, 00-667 Warszawa',
+        'is_valid': True
+        }
+
+    headers = {
+        "X-API-KEY": user_with_api_key
+    }
+
+    data = {
+        "tax_id": "9111852372"  # Example tax ID
+    }
+
+    response = await client.post(
+        "/api/v1/business/validate", 
+        headers=headers,
+        json=data
+        )
+
+    assert response.status_code == 200
