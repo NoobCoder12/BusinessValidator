@@ -60,7 +60,7 @@ The raw key is returned once — store it securely. Only a bcrypt hash is saved 
 
 **Backend:** FastAPI, SQLAlchemy, Pydantic, Zeep, SlowAPI, Alembic  
 **Database:** PostgreSQL  
-**Infrastructure:** Docker, AWS (ECS, RDS, ElastiCache), Sentry
+**Infrastructure:** Docker, AWS (ECS, RDS, ElastiCache), Sentry  
 **Testing:** pytest, pytest-asyncio, httpx
 
 ---
