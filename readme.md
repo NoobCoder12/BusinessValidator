@@ -1,8 +1,10 @@
 # Business Verification API
 
+[![Backend Tests](https://github.com/NoobCoder12/BusinessValidator/actions/workflows/tests.yml/badge.svg)](https://github.com/NoobCoder12/BusinessValidator/actions/workflows/tests.yml)
+
 A REST API that lets users verify whether a business is an active VAT taxpayer using its NIP (tax ID). Built with FastAPI and integrated with the official VIES SOAP service.
 
-> **Version:** 1.6.0
+> **Version:** 1.7.0
 
 ---
 
@@ -34,6 +36,7 @@ I built this to get hands-on experience with FastAPI and explore how to integrat
 - **Redis caching** — cache VIES responses to avoid redundant external calls
 - **GUI** — for redis and pgadmin
 - **Sentry** — see [Monitoring](#monitoring)
+- **Pytest** - see [Testing](#testing)
 
 ---
 
@@ -55,6 +58,7 @@ The raw key is returned once — store it securely. Only a bcrypt hash is saved 
 **Backend:** FastAPI, SQLAlchemy, Pydantic, Zeep, SlowAPI, Alembic  
 **Database:** PostgreSQL  
 **Infrastructure:** Docker, Sentry
+**Testing:** pytest, pytest-asyncio, httpx
 
 ---
 
@@ -164,22 +168,23 @@ Add a new database:
 
 ## Testing
 
-Currently verified through manual end-to-end testing. A full automated suite is planned for v1.7:
+The project includes an automated test suite built with **pytest** and **pytest-asyncio**.
 
-- Integration tests using FastAPI's `TestClient`
-- Isolated test database
-- GitHub Actions CI/CD pipeline
-- Full pytest coverage (unit + integration)
-
----
-
-## Roadmap (v1.7)
-
-- **Pytest suite** — unit and integration test coverage
+- **Integration tests** — endpoint testing using `httpx.AsyncClient` with an isolated PostgreSQL test database, created fresh and dropped after each test
+- **Unit tests** — validators and Pydantic schemas tested directly without HTTP layer
+- **Mocking** — external services (VIES, httpx) are mocked to avoid real API calls and ensure deterministic results
+- **CI/CD** — GitHub Actions runs the full suite on every push and pull request
+- **Coverage** — minimum 80% enforced via `pytest-cov`
 
 ---
 
 ## Changelog
+
+### v1.7.0
+- Automated test suite with pytest and pytest-asyncio
+- Integration tests with isolated test database
+- GitHub Actions CI/CD pipeline
+- 80% coverage enforced via pytest-cov
 
 ### v.1.6.0
 - Asynchronous requests for Zeep
