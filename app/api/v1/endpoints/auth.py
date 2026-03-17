@@ -109,7 +109,10 @@ async def login_for_access_token(
 
 @router.get("/me", response_model=UserOut, summary="Get your user data")
 @limiter.limit("10/minute")
-async def read_user_me(current_user: User = Depends(get_current_user)):
+async def read_user_me(
+    request: Request, 
+    current_user: User = Depends(get_current_user)
+):
     """
     Endpoint will let you trough only with valid token.
     Returns data of current user
