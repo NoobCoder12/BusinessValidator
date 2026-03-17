@@ -2,7 +2,7 @@ from zeep import AsyncClient
 from zeep.helpers import serialize_object
 from zeep.exceptions import TransportError, Fault
 from zeep.transports import AsyncTransport
-import httpx    #
+import httpx
 
 # TODO: think about async if there is more requests
 

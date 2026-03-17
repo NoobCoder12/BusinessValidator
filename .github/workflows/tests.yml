@@ -1,0 +1,55 @@
+# Config file for GitHub Actions
+
+name: Backend Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Fastest option
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6   # Copies code on VM
+
+      - name: Set up Python
+        uses: actions/setup-python@v5   # Official GitHub tool
+        with:
+          python-version: '3.12'
+            
+        # Creating .env file for GitHub Actions
+      - name: Create .env
+        run: |
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+            echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
+            echo "REFRESH_ACCESS_TOKEN_EXPIRE=${{ secrets.REFRESH_ACCESS_TOKEN_EXPIRE }}" >> .env
+            echo "ACCESS_TOKEN_EXPIRE=${{ secrets.ACCESS_TOKEN_EXPIRE }}" >> .env
+            echo "REFRESH_TOKEN_KEY=${{ secrets.REFRESH_TOKEN_KEY }}" >> .env
+
+      - name: Start Database (Docker)
+        run: docker compose up -d
+
+      - name: Install dependencies
+        run: |            # Everything below will be executed one by one
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+    
+        # Wait for DB setup, Docker takes care of it, not needed
+    #   - name: Wait for DB
+    #     run: |
+    #         for i in {1..30}; do
+    #             pg_isready -h localhost && break
+    #             echo "Waiting for DB... $i"
+    #             sleep 1
+    #         done
+
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}  # github.workspace is a root dir
+          ENV: testing
+        run: |
+          pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+          
