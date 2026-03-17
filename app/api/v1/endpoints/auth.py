@@ -18,6 +18,7 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
     # Checking if users email is already taken
@@ -103,6 +104,7 @@ async def login_for_access_token(
 
 
 @router.get("/me", response_model=UserOut, summary="Get your user data")
+@limiter.limit("10/minute")
 async def read_user_me(current_user: User = Depends(get_current_user)):
     """
     Endpoint will let you trough only with valid token.
@@ -113,6 +115,7 @@ async def read_user_me(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/refresh")
+@limiter.limit("10/minute")
 async def refresh_access_token(
     db: AsyncSession = Depends(get_db),
     refresh_token: str = Cookie(None)       # FastAPI will look for refresh_token, it is optional
@@ -142,6 +145,7 @@ async def refresh_access_token(
 
 
 @router.post("/logout")
+@limiter.limit("10/minute")
 async def logout(response: Response):
     """
     Deletes cookie from browser.
@@ -159,6 +163,7 @@ async def logout(response: Response):
 
 
 @router.post("/me/api-key", description="Endpoint to get API Key")
+@limiter.limit("10/minute")
 async def create_user_api_key(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
