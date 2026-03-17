@@ -4,11 +4,13 @@ from app.models.status import HealthCheck
 from app.schemas.status import SystemStatus
 from app.services.health_service import check_vies_health
 from app.db.deps import get_db
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 
 @router.get("/status", response_model=SystemStatus)
+@limiter.limit("10/minute")
 async def get_system_status(db: AsyncSession = Depends(get_db)):
     vies_status = await check_vies_health()
 
