@@ -8,12 +8,13 @@ from app.core.auth import decode_access_token, api_key_header, verify_api_key_ha
 import redis.asyncio as redis
 from typing import AsyncGenerator
 import sentry_sdk
-
+import os
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets Bearer and Token from Authorization header and passes to function
 
 # Connection Pooling for Redis requests
-redis_pool = redis.ConnectionPool.from_url("redis://redis:6379", decode_responses=True)
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+redis_pool = redis.ConnectionPool.from_url(redis_url, decode_responses=True)
 
 
 async def get_db():
