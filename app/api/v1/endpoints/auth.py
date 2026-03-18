@@ -64,7 +64,7 @@ async def register_user(
     return new_user
 
 
-@router.post("/token", summary="Login to get access token. If no username provided user email")
+@router.post("/token", summary="Login to get access token. If no username provided use email")
 @limiter.limit("10/minute")
 async def login_for_access_token(
     request: Request,   # Limiter needs an access to request
