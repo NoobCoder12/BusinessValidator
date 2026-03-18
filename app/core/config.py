@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     SENTRY_URL: str
 
+    ENV: str = "development"
+
     @property   # method is used as variable
     def DATABASE_URL(self) -> str:
         """

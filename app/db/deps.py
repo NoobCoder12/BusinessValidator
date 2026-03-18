@@ -14,7 +14,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")     # Gets B
 
 # Connection Pooling for Redis requests
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
-redis_pool = redis.ConnectionPool.from_url(redis_url, decode_responses=True)
+redis_pool = redis.ConnectionPool.from_url(
+    redis_url,
+    decode_responses=True,
+    socket_connect_timeout=5,
+    socket_timeout=5
+    )   # Timeout in case of blocking the connection
 
 
 async def get_db():

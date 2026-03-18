@@ -10,7 +10,7 @@ from fastapi import Request
 router = APIRouter()
 
 
-@router.get("/status", response_model=SystemStatus)
+@router.get("/status", summary="Get system health status", response_model=SystemStatus)
 @limiter.limit("10/minute")
 async def get_system_status(request: Request, db: AsyncSession = Depends(get_db)):
     vies_status = await check_vies_health()

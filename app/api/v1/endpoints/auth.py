@@ -17,7 +17,7 @@ from app.core.logging import logger
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register", summary="Register a new user account", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def register_user(
     request: Request,
@@ -64,7 +64,7 @@ async def register_user(
     return new_user
 
 
-@router.post("/token", summary="Login with email as username if no nickname provided")
+@router.post("/token", summary="Login to get access token. If no username provided user email")
 @limiter.limit("10/minute")
 async def login_for_access_token(
     request: Request,   # Limiter needs an access to request
@@ -93,12 +93,14 @@ async def login_for_access_token(
     access_token = create_access_token(data={"sub": str(user.id)})      # str for safety issues
     refresh_token = create_refresh_token(data={"sub": str(user.id)}) 
 
+    secure = settings.ENV == "production"   # Value is overwritten on Cloud
+    
     # Create cookie for refresh token
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,              # For safety, JS won't get that
-        secure=False,               # TODO: Change for True while deploying
+        secure=secure,               # False for development, True for production
         samesite="lax",             # Prevents CSRF
         max_age=settings.REFRESH_ACCESS_TOKEN_EXPIRE * 3600 * 24
     )
@@ -121,7 +123,7 @@ async def read_user_me(
     return current_user
 
 
-@router.post("/refresh")
+@router.post("/refresh", summary="Refresh access token using cookie")
 @limiter.limit("10/minute")
 async def refresh_access_token(
     request: Request,
@@ -152,7 +154,7 @@ async def refresh_access_token(
     return {"access_token": new_access_token, "token_type": "bearer"}
 
 
-@router.post("/logout")
+@router.post("/logout", summary="Logout and delete refresh token cookie")
 @limiter.limit("10/minute")
 async def logout(
     request: Request,
@@ -162,10 +164,13 @@ async def logout(
     Deletes cookie from browser.
     Access token still lives, but won't be refreshed.
     """
+
+    secure = settings.ENV == "production"   # Value is overwritten on Cloud
+
     response.delete_cookie(
         key="refresh_token",
         httponly=True,              # For safety, JS won't get that
-        secure=False,               # TODO: Change for True while deploying
+        secure=secure,               # False for development, True for production
         samesite="lax"              # Prevents CSRF
     )
 
@@ -173,7 +178,7 @@ async def logout(
     return {"detail": "Successfully logged out"}
 
 
-@router.post("/me/api-key", description="Endpoint to get API Key")
+@router.post("/me/api-key", summary="Generate or rotate API key")
 @limiter.limit("10/minute")
 async def create_user_api_key(
     request: Request,

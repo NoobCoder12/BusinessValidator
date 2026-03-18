@@ -15,7 +15,7 @@ import json
 router = APIRouter()
 
 
-@router.post("/validate", response_model=BusinessCheckOut)  # Prevents from returning all data about business from db
+@router.post("/validate", summary="Validate business VAT number", response_model=BusinessCheckOut)  # Prevents from returning all data about business from db
 @limiter.limit("10/minute")
 async def validate_business(
     request: Request,       # For rate limiter
