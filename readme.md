@@ -187,6 +187,7 @@ The project includes an automated test suite built with **pytest** and **pytest-
 - Added missing summary for endpoints in Swagger
 - Refresh cookie secure flag changed to `True` in production
 - Timeout for Redis added
+- Response parameter added for Rate Limiter headers
 
 ### v1.8.2
 - Fixed missing `request` argument on rate-limited endpoints

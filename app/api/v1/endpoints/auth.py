@@ -21,7 +21,8 @@ router = APIRouter()
 @limiter.limit("10/minute")
 async def register_user(
     request: Request,
-    user_in: UserCreate, 
+    response: Response,
+    user_in: UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
 
@@ -94,7 +95,7 @@ async def login_for_access_token(
     refresh_token = create_refresh_token(data={"sub": str(user.id)}) 
 
     secure = settings.ENV == "production"   # Value is overwritten on Cloud
-    
+
     # Create cookie for refresh token
     response.set_cookie(
         key="refresh_token",
@@ -112,7 +113,8 @@ async def login_for_access_token(
 @router.get("/me", response_model=UserOut, summary="Get your user data")
 @limiter.limit("10/minute")
 async def read_user_me(
-    request: Request, 
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -127,6 +129,7 @@ async def read_user_me(
 @limiter.limit("10/minute")
 async def refresh_access_token(
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     refresh_token: str = Cookie(None)       # FastAPI will look for refresh_token, it is optional
 ):
@@ -182,6 +185,7 @@ async def logout(
 @limiter.limit("10/minute")
 async def create_user_api_key(
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
